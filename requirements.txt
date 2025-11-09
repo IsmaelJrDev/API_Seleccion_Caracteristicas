@@ -1,0 +1,13 @@
+Django
+djangorestframework
+django-cors-headers
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+Pillow
+gunicorn
+whitenoise
+pymongo
+python-dotenv
