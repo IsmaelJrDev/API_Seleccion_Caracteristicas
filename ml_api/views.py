@@ -36,10 +36,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler
 from sklearn.metrics import f1_score, accuracy_score, classification_report, confusion_matrix
 from sklearn.tree import plot_tree
-import matplotlib
-matplotlib.use('Agg')  # Backend sin GUI para servidor
-import matplotlib.pyplot as plt
-import seaborn as sns
 import base64
 from io import BytesIO
 from django.shortcuts import render
