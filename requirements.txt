@@ -7,4 +7,5 @@ python-dotenv
 whitenoise
 django-cors-headers
 gunicorn
+matplotlib
 pymongo[srv]
