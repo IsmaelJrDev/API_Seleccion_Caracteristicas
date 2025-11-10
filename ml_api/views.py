@@ -5,30 +5,30 @@ import math
 import gc
 import pickle
 import hashlib
-import base64
-from io import BytesIO
+# import base64  <-- No se usa si quitamos la función de imagen
+# from io import BytesIO <-- No se usa si quitamos la función de imagen
 from datetime import datetime
 
 # --- Imports de Django y REST Framework ---
 from django.shortcuts import render
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt  # <-- Importante para el POST desde HTML
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-# --- Imports de Data Science y Plotting ---
+# --- Imports de Data Science ---
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt  # Corregido de 'matplotlib' a 'matplotlib.pyplot'
 from pymongo import MongoClient
+# import matplotlib.pyplot as plt  <-- ¡QUITADO! Consume mucha memoria y tiempo al iniciar
 
 # --- Imports de Scikit-learn ---
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score, accuracy_score, classification_report, confusion_matrix
 from sklearn.preprocessing import RobustScaler
-from sklearn.tree import plot_tree
+# from sklearn.tree import plot_tree <-- No se usa en la vista
 
 # ==============================================================================
 # --- FUNCIONES AUXILIARES ---
@@ -58,16 +58,16 @@ def remove_labels(df, label_name):
     y = df[label_name].copy()
     return X, y
 
-def image_to_base64(fig):
-    """
-    Convierte una figura de matplotlib a formato base64 para enviarla en JSON.
-    """
-    buffer = BytesIO()
-    fig.savefig(buffer, format='png', bbox_inches='tight', dpi=100)
-    buffer.seek(0)
-    image_base64 = base64.b64encode(buffer.read()).decode()
-    plt.close(fig)  # Cierra la figura para liberar memoria
-    return f"data:image/png;base64,{image_base64}"
+# def image_to_base64(fig):  <-- ¡QUITADO! No se usa en la API
+#     """
+#     Convierte una figura de matplotlib a formato base64 para enviarla en JSON.
+#     """
+#     buffer = BytesIO()
+#     fig.savefig(buffer, format='png', bbox_inches='tight', dpi=100)
+#     buffer.seek(0)
+#     image_base64 = base64.b64encode(buffer.read()).decode()
+#     plt.close(fig)
+#     return f"data:image/png;base64,{image_base64}"
 
 
 # ==============================================================================
@@ -101,7 +101,7 @@ def test_api(request):
 
 
 @api_view(['GET', 'POST'])
-@csrf_exempt  # <-- PERMITE EL POST DESDE TU FORMULARIO HTML
+@csrf_exempt
 def feature_selection(request):
     """
     Endpoint principal de la API para la selección de características.
@@ -114,8 +114,7 @@ def feature_selection(request):
                 'endpoint': '/api/feature-selection/',
                 'parámetros_requeridos': {
                     'dataset': 'Archivo CSV que debe incluir una columna llamada "calss"'
-                },
-                'ejemplo_uso': 'Usa un cliente HTTP (como Postman) o el formulario HTML para enviar el archivo CSV'
+                }
             }
         }, status=status.HTTP_400_BAD_REQUEST)
     
@@ -165,7 +164,6 @@ def feature_selection(request):
         clf_rnd_initial = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
         clf_rnd_initial.fit(X_train, y_train)
         
-        # Obtener puntuación inicial
         y_pred_initial = clf_rnd_initial.predict(X_val)
         f1_initial = f1_score(y_pred_initial, y_val, average='weighted')
         print(f"F1 Score Inicial (todas): {f1_initial}")
@@ -193,12 +191,10 @@ def feature_selection(request):
         clf_rnd_reduced = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
         clf_rnd_reduced.fit(X_train_reduced, y_train)
         
-        # Obtener puntuación del modelo reducido
         y_pred = clf_rnd_reduced.predict(X_val_reduced)
         f1_reduced = f1_score(y_pred, y_val, average='weighted')
         print(f"F1 Score Reducido (top 10): {f1_reduced}")
         
-        # Calcular tiempo de ejecución
         execution_time = time.time() - start_time
         
         # 10. Preparar la respuesta JSON
@@ -207,13 +203,13 @@ def feature_selection(request):
             'initial_model': {
                 'f1_score': round(float(f1_initial), 4),
                 'features_count': X_train.shape[1],
-                'data_preview': df.head(10).to_dict(orient='list'), # Usar 'list' para mejor formato JSON
+                'data_preview': df.head(10).to_dict(orient='list'),
                 'features_list': list(df.columns)
             },
             'reduced_model': {
                 'f1_score': round(float(f1_reduced), 4),
                 'features_count': len(columns),
-                'data_preview': df[columns].head(10).to_dict(orient='list'), # Usar 'list'
+                'data_preview': df[columns].head(10).to_dict(orient='list'),
                 'features_list': columns,
                 'feature_importance': feature_importances_sorted
             },
@@ -231,15 +227,13 @@ def feature_selection(request):
             }
         }
         
-        # 11. Guardar en MongoDB (Opcional, si MONGO_URI está configurado)
+        # 11. Guardar en MongoDB (Opcional)
         try:
             mongo_uri = os.environ.get('MONGO_URI')
             if mongo_uri:
                 client = MongoClient(mongo_uri)
                 db = client['feature_selection_db']
                 collection = db['feature_selections']
-
-                # Crear documento para guardar
                 document = {
                     'timestamp': datetime.utcnow(),
                     'initial_model': {
@@ -276,5 +270,7 @@ def feature_selection(request):
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    
+    
 def home(request):
     return render(request, 'index.html')
