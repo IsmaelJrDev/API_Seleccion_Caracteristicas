@@ -1,12 +1,15 @@
-# ml_api/urls.py
+# En: ml_api/urls.py
 
 from django.urls import path
 from . import views
 
+# Esta ruta ahora se accederá como:
+# POST /api/v1/analizar/
+
 urlpatterns = [
-    # 1. Endpoint de la API para procesar el archivo CSV
-    path('api/feature-selection/', views.feature_selection, name='feature_selection'),
+    # Renombramos la vista para que sea más claro
+    path('analizar/', views.AnalyzeFeaturesView.as_view(), name='analizar-caracteristicas'),
     
-    # 2. Ruta raíz para mostrar la página index.html
-    path('', views.home, name='home'),
+    # Mantenemos la vista para tu página de inicio (index.html)
+    # Esta ruta está en rf_project/urls.py, así que aquí no hace falta.
 ]
